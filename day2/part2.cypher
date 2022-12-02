@@ -20,4 +20,4 @@ WITH
     CASE won WHEN true THEN 6 ELSE 0 END AS won_score,
     my_g.val AS shape_score
 WITH loss_score + draw_score + won_score + shape_score AS score
-RETURN sum(score) AS `part1`;
+RETURN sum(score) AS `part 2`;
