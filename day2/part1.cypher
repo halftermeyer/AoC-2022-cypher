@@ -5,7 +5,7 @@ CREATE (r:Gesture {name:"Rock", opp_key: "A", my_key: "X", val:1})-[:BEATS]->
 LOAD CSV FROM 'file:///input.txt' AS line
 WITH split(line[0], " ") AS line
 WITH line [0] AS opp_move, line [1] AS my_move
-OPTIONAL MATCH (opp_g:Gesture WHERE opp_g.opp_key = opp_move), (my_g:Gesture WHERE my_g.my_key = my_move)
+MATCH (opp_g:Gesture WHERE opp_g.opp_key = opp_move), (my_g:Gesture WHERE my_g.my_key = my_move)
 WITH
     opp_g,
     my_g,
