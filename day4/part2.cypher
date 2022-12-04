@@ -11,4 +11,4 @@ WITH
     affectations[1][1] AS e2_to
 WHERE NOT e1_to < e2_from
     AND NOT e2_to < e1_from
-RETURN count(*) AS `part 2;
+RETURN count(*) AS `part 2`;
