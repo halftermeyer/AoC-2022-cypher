@@ -11,4 +11,4 @@ WITH
     affectations[1][1] AS e2_to
 WHERE e1_from <= e2_from <= e2_to <= e1_to
     OR e2_from <= e1_from <= e1_to <= e2_to
-RETURN pair, affectations;
+RETURN count(*) AS `part 1`;
