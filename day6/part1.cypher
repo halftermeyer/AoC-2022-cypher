@@ -17,7 +17,9 @@ WITH collect (c) AS cs
 CALL apoc.nodes.link(cs, "NEXT");
 
 MATCH p=(c1)-[*3]->(c4)
-WITH size(apoc.coll.toSet([c IN nodes(p) | c.sym])) = 4 AS valid, c4.ix + 1 AS nth
+WITH
+  size(apoc.coll.toSet([c IN nodes(p) | c.sym])) = 4 AS valid,
+  c4.ix + 1 AS nth
 WHERE valid
 WITH valid, nth
 ORDER BY nth
