@@ -16,10 +16,10 @@ WITH c ORDER BY c.ix
 WITH collect (c) AS cs
 CALL apoc.nodes.link(cs, "NEXT");
 
-MATCH p=(c1)-[*13]->(c4)
+MATCH p=(c1)-[*13]->(c14)
 WITH
   size(apoc.coll.toSet([c IN nodes(p) | c.sym])) = 14 AS valid,
-  c4.ix + 1 AS nth
+  c14.ix + 1 AS nth
 WHERE valid
 WITH valid, nth
 ORDER BY nth
