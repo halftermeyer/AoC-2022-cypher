@@ -1,5 +1,6 @@
 //input, test or test_larger
 :param env => 'input';
+:param kNb => 10;
 
 MATCH (n) DETACH DELETE n;
 
@@ -7,7 +8,7 @@ CREATE INDEX position_x_y
 IF NOT EXISTS
 FOR (p:Position) ON (p.x, p.y);
 
-WITH [ix IN range(0,9) | {ix: ix, x: 0, y: 0}] AS knots
+WITH [ix IN range(0,$kNb - 1) | {ix: ix, x: 0, y: 0}] AS knots
 UNWIND knots AS k
 CREATE (kn:Knot {id:k.ix})
 MERGE (pos:Position {x: k.x, y: k.y})
@@ -88,5 +89,5 @@ CALL apoc.cypher.runMany(
 //CALL apoc.periodic.commit()
 RETURN id, result;
 
-MATCH (p:Position WHERE 9 IN p.seen_knots)
+MATCH (p:Position WHERE ($kNb - 1) IN p.seen_knots)
 RETURN count(p) AS `part 2`;
