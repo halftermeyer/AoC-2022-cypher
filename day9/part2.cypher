@@ -1,5 +1,6 @@
 //input, test or test_larger
 :param env => 'input';
+//number of knots
 :param kNb => 10;
 
 MATCH (n) DETACH DELETE n;
