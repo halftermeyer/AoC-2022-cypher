@@ -1,4 +1,5 @@
-:param env => 'test';
+//input or test
+:param env => 'input';
 
 MATCH (n) DETACH DELETE n;
 
