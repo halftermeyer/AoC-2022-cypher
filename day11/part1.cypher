@@ -21,11 +21,6 @@ WITH {
 CREATE (m:Monkey) SET m = monkey;
 
 MATCH (m:Monkey)
-WITH m, m.monkey AS id ORDER BY id
-WITH collect(m) AS monkeys
-CALL apoc.nodes.link(monkeys, "NEXT_IN_ROUND");
-
-MATCH (m:Monkey)
 MATCH (m_true:Monkey WHERE m_true.monkey = m.monkey_true)
 CREATE (m)-[:THROWS_TO {when: true}]->(m_true);
 MATCH (m:Monkey)
