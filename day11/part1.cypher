@@ -1,7 +1,6 @@
 //input or test
 :param env => 'input';
 :param round => 20;
-:param relief_factor => 3;
 
 MATCH (n) DETACH DELETE n;
 
@@ -49,7 +48,7 @@ CALL apoc.periodic.commit('
     "" + item),
     {})
   YIELD value
-  WITH value.new / $relief_factor AS new_val, m
+  WITH value.new / 3 AS new_val, m
   WITH new_val % m.test_div = 0 AS test, new_val, m
   OPTIONAL MATCH (m)-[:THROWS_TO {when: test}]->(other:Monkey)
   WITH m, other, collect(new_val) AS new_items
@@ -57,7 +56,7 @@ CALL apoc.periodic.commit('
   WITH collect(m) AS _
   WITH COUNT {(m:Monkey WHERE m.round < $round)} AS limit
   RETURN limit
-',{round: $round, relief_factor: $relief_factor});
+',{round: $round});
 
 MATCH (m:Monkey)
 WITH m, m.inspected_total AS inspected
