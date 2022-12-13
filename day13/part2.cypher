@@ -23,8 +23,9 @@ WITH packet
 CREATE (p:Packet:Init)
 SET p = packet;
 
-MATCH (left:Packet:Init),(right:Packet:Init)
-WHERE id(left) < id(right)
+MATCH (left:Packet&Init),(right:Packet&Init)
+WHERE (left.divider AND NOT right.divider)
+OR (left.divider AND right.divider AND id(left) < id(right))
 CREATE (pair:Pair:Root)
 CREATE (pair)-[:LEFT]->(left)
 CREATE (pair)-[:RIGHT]->(right);
