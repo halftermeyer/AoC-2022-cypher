@@ -2,6 +2,9 @@
 
 MATCH (n) DETACH DELETE n;
 
+///// TO LAZY TO SORT, WILL COMPUTE ALL POSSIBLE PAIR
+// AND COUNT HOW MANY BEFORE EACH DIVIDER
+
 CALL {
   LOAD CSV FROM 'file:///'+$env+'.txt' AS lines FIELDTERMINATOR "\n"
   WITH [line IN lines|{val:line, divider: false}] AS lines
@@ -269,7 +272,7 @@ MATCH (left:Init)<-[:LEFT]-(r:Root)-[:RIGHT]->(right:Init)
 WHERE NOT r.right_order
 CREATE (left)<-[:BEFORE]-(right);
 
-/////
+///// TOO LAZY TO SORT
 
 MATCH (div:Init WHERE div.divider)
 MATCH (d:Init)
