@@ -75,34 +75,15 @@ MATCH (src:Point&!Rock)-[:DOWN]->()-[:RIGHT]->(tgt:Point&!Rock)
 MERGE (src)-[:FALLS {priority_weight: 2}]->(tgt);
 
 
-//////////// COMPUTE FALL /////////////////
+//////////// COMPUTE POURING SOURCE TRANSITIVE FALL CLOSURE /////////////////
 
+MATCH (p:PouringSource)
+SET p:Rest;
 CALL apoc.periodic.commit('
-CALL apoc.cypher.runMany(\'
-MATCH ()-[r:BEST_FALL]->()
-DELETE r;
+MATCH (sand:Rest)-[:FALLS]->(p:Point&!Rest)
+WITH DISTINCT p
+SET p:Rest
+WITH count(p) AS limit
+RETURN limit',{});
 
-MATCH (src:Point)-[r:FALLS]->()
-WITH src, r.priority_weight AS pw, r
-ORDER BY pw
-WITH src, collect(r)[0] AS r
-WITH src, endNode(r) AS tgt
-MERGE (src)-[:BEST_FALL]->(tgt);
-
-MATCH path=(src:PouringSource)-[:BEST_FALL*0..]->(stop:Point&!PouringSource)
-WHERE NOT EXISTS{ (stop)-[:FALLS]->() }
-SET stop:Rest
-WITH stop
-MATCH (stop)-[r:FALLS]-()
-DELETE r
-WITH count(stop) AS limit
-RETURN limit;
-\', {}) YIELD result
-WITH result.limit AS limit
-WHERE limit IS NOT NULL
-//WHERE result.limit IS NOT null
-RETURN limit',{})
-
-////////// GET RESULT ////////
-
-MATCH (n:Rest) RETURN count(n) + 1 AS `part 2`
+MATCH (n:Rest) RETURN count(n) AS `part 2`;
