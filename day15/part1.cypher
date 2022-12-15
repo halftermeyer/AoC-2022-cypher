@@ -44,15 +44,15 @@ CREATE (interv:XInterval {inf: i.inf, sup: i.sup});
 
 // reduce intervals
 CALL apoc.periodic.commit('
-MATCH (i1:XInterval), (i2:XInterval)
-WHERE id(i1) <> id(i2)
-AND i1.inf <= i2.inf <= i1.sup
-WITH i1, i2
+MATCH (left:XInterval), (right:XInterval)
+WHERE id(left) <> id(right)
+AND left.inf <= right.inf <= left.sup + 1
+WITH left, right
 LIMIT 1
 CREATE (fusion:XInterval
-    {inf: apoc.coll.min([i1.inf, i2.inf]), sup: apoc.coll.max([i1.sup, i2.sup])})
-DETACH DELETE i1
-DETACH DELETE i2
+    {inf: apoc.coll.min([left.inf, right.inf]), sup: apoc.coll.max([left.sup, right.sup])})
+DETACH DELETE left
+DETACH DELETE right
 WITH count(*) AS limit
 RETURN limit',{});
 
