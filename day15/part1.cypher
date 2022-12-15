@@ -1,5 +1,7 @@
 :param env => 'input';
-:param rowToCheck => 2000000;
+:param rowToCheck => 2_000_000;
+:param min_coord => 0;
+:param max_coord => 4_000_000;
 
 MATCH (n) DETACH DELETE n;
 
