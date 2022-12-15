@@ -17,3 +17,6 @@ WHERE none(c IN covered WHERE c)
 CREATE (:Point:Result {x:x,y:y})',
 {parallel:true, batchSize: 1000,
 params:{min_coord:$min_coord, max_coord:$max_coord}});
+
+MATCH (r:Result)
+RETURN r.x * $max_coord + r.y AS `part 2`;
