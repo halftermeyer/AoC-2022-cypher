@@ -1,5 +1,5 @@
-:param env => 'test';
-:param rowToCheck => 10;
+:param env => 'input';
+:param rowToCheck => 2000000;
 
 MATCH (n) DETACH DELETE n;
 
