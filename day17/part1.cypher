@@ -1,4 +1,4 @@
-:param env => 'test';
+:param env => 'input';
 :param shapes => 'shapes';
 :param shape_nb => 2022;
 
@@ -74,7 +74,7 @@ SET p:Rest:Bottom;
 MATCH (p:Pix WHERE p.x IN [0,8])
 SET p:Rest:Wall;
 
-CREATE (:Counter {val: 2022, new_sprite: true});
+CREATE (:Counter {val: 2023, new_sprite: true});
 
 ///////// END OF SETUP ///////
 
@@ -154,4 +154,9 @@ CALL apoc.periodic.commit('
   WHERE result.limit IS NOT null
   WITH result.limit AS limit
   RETURN limit;
-')
+');
+
+MATCH (p:Pix&Rest&!Wall)
+WITH p.y AS y ORDER BY y DESC
+LIMIT 1
+RETURN y AS `part 1`;
