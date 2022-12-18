@@ -6,7 +6,9 @@ CREATE CONSTRAINT pix_x_y
 IF NOT EXISTS
 FOR (p:Pix) REQUIRE (p.x, p.y) IS NODE KEY;
 
-MATCH (n) DETACH DELETE n;
+CALL apoc.periodic.iterate(
+'MATCH (n) RETURN n', 'DETACH DELETE n',
+{batchSize:100});
 
 // parse
 LOAD CSV FROM 'file:///'+$env+'.txt' AS line FIELDTERMINATOR "\n"
@@ -63,9 +65,93 @@ ORDER BY x
 WITH y, collect(p) AS row
 CALL apoc.nodes.link (row, "RIGHT");
 
+MATCH (a)-[:RIGHT]->(b)
+CREATE (a)-[:ASIDE {direction: ">"}]->(b)
+CREATE (b)-[:ASIDE {direction: "<"}]->(a);
+
 MATCH (p:Pix WHERE p.y = 0)
 SET p:Rest:Bottom;
 MATCH (p:Pix WHERE p.x IN [0,8])
-SET p:Rest:Wall
+SET p:Rest:Wall;
+
+CREATE (:Counter {val: 2022, new_sprite: true});
 
 ///////// END OF SETUP ///////
+
+CALL apoc.periodic.commit('
+  CALL apoc.cypher.runMany(\'
+
+  // GET HEIGTH
+
+  MATCH (c:Counter WHERE c.new_sprite)
+  SET c.val = c.val -1, c. new_sprite = false
+  WITH c
+  MATCH (p:Pix&Rest&!Wall)
+  WITH p.y AS y ORDER BY y DESC
+  LIMIT 1
+  WITH y AS height
+  // GET CURRENT SHAPE
+  MATCH (rock:RockType&Current)-[:NEXT]->(next_rock)
+  WITH *
+  REMOVE rock:Current
+  SET next_rock:Current
+  WITH height, rock
+  // CONVERT JSON
+  CALL apoc.cypher.run("RETURN "+ replace(rock.sprite, "\\\\"", "") +" AS sprite", {})
+  YIELD value
+  WITH height, rock, value.sprite AS sprite
+
+  // PLACE SPRITE
+  WITH *, 3 AS x_ref, height + 4 AS y_ref
+  UNWIND sprite AS pix
+  WITH rock, {x: x_ref+ pix.delta_x, y: y_ref+pix.delta_y} AS pix
+  MATCH (p:Pix {x: pix.x, y: pix.y})
+  SET p:Falling;
+
+  // LET IT MOVE
+
+  MATCH (p:Pix&Falling)
+  WITH collect(p) AS ps
+  MATCH (jet:Jet&Current)-[:NEXT]->(next_jet:Jet)
+  REMOVE jet:Current
+  SET next_jet:Current
+  WITH ps, jet.direction AS dir
+  WHERE none(p IN ps WHERE EXISTS {(p)-[:ASIDE {direction: dir}]->(:Wall|Rest)})
+  UNWIND ps AS p
+  MATCH (p)-[:ASIDE {direction: dir}]->(new_p:Pix)
+  REMOVE p:Falling
+  SET new_p:FallingSoon;
+
+  MATCH (p:FallingSoon)
+  REMOVE p:FallingSoon
+  SET p:Falling;
+
+  MATCH (p:Pix&Falling), (c:Counter)
+  WITH c, collect(p) AS ps
+  WHERE any(p IN ps WHERE EXISTS {(p)-[:DOWN]->(:Bottom|Rest)})
+  SET c.new_sprite = true
+  WITH ps
+  UNWIND ps AS p
+  REMOVE p:Falling
+  SET p:Rest;
+
+  MATCH (p:Pix&Falling)
+  MATCH (p)-[:DOWN]->(new_p:Pix)
+  REMOVE p:Falling
+  SET new_p:FallingSoon;
+
+  MATCH (p:FallingSoon)
+  REMOVE p:FallingSoon
+  SET p:Falling;
+
+
+  MATCH (c:Counter)
+  WITH c.val AS limit
+  RETURN limit;\',
+
+  {}) YIELD result
+  WITH result
+  WHERE result.limit IS NOT null
+  WITH result.limit AS limit
+  RETURN limit;
+')
