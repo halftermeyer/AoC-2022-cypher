@@ -74,7 +74,7 @@ SET p:Rest:Bottom;
 MATCH (p:Pix WHERE p.x IN [0,8])
 SET p:Rest:Wall;
 
-CREATE (:Counter {val: 2023, new_sprite: true});
+CREATE (:Counter {val: $shape_nb + 1, new_sprite: true});
 
 ///////// END OF SETUP ///////
 
