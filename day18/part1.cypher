@@ -58,7 +58,7 @@ MATCH (c1:Cube)-[:YCONSECUTIVE]->(c2:Cube)
 MERGE (c1)-[:CONSECUTIVE {axis:"y", dist:c2.y-c1.y}]->(c2);
 
 MATCH (c1:Cube)-[:ZCONSECUTIVE]->(c2:Cube)
-MERGE (c1)-[:CONSECUTIVE {axis:"z", dist:c2.z-c1.z}]->(c2
+MERGE (c1)-[:CONSECUTIVE {axis:"z", dist:c2.z-c1.z}]->(c2);
 
 MATCH ()-[r:CONSECUTIVE WHERE r.dist = 1]->()
 WITH count(r) AS adjacencies
