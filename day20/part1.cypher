@@ -35,8 +35,8 @@ MATCH (:Number) WITH count(*) AS numnum
 MATCH (n:Number&Current)-[:HAS_TOKEN]->(t:PosToken)
 WITH *,
     CASE
-        WHEN n.sign = -1 THEN numnum -1 - n.absVal
-        ELSE n.absVal
+        WHEN n.sign = -1 THEN (numnum -1 - n.absVal) % (numnum - 1)
+        ELSE n.absVal % (numnum-1)
     END AS length
 CALL apoc.path.expand(t, "NEXT>", null, length, length)
 YIELD path
@@ -71,17 +71,14 @@ WITH result.limit AS limit
 RETURN limit',
 {});
 
-WITH count(n) AS numnum
 MATCH (p:PosToken)<-[:HAS_TOKEN]-(n:Number WHERE n.num=0)
-WITH p, numnum
-MATCH path=(p)-[:NEXT*1..]->(last:PosToken)
-WHERE EXISTS {(last)-[:NEXT]->(p)}
-UNWIND [ix IN range(0, size(nodes(path))-1) | {ix:ix, token: nodes(path)[ix]}] AS token
-WITH token.ix AS ix, token.token AS token, numnum
-MATCH (token)<-[:HAS_TOKEN]-(num:Number)
-WITH ix, num.num AS num, ix = 1000%numnum AS thousands, ix = 2000%numnum AS twothousands, ix = 3000%numnum AS threethousands
-WITH num WHERE any(x IN [thousands, twothousands, threethousands] WHERE x)
-RETURN sum(num) AS `part 1`;
+UNWIND [1000, 2000, 3000] AS dist
+CALL apoc.path.expandConfig(p,
+    {relationshipFilter: "NEXT>", minLevel: dist, maxLevel: dist, uniqueness:"NONE"})
+YIELD path
+WITH nodes(path)[-1] AS target
+MATCH (target)<-[:HAS_TOKEN]-(num:Number)
+RETURN sum(num.num) AS `part 1`;
 
 // SHOW CURRENT ORDER
 // MATCH (p:PosToken)<-[:HAS_TOKEN]-(n:Number WHERE n.num=0)
