@@ -21,7 +21,7 @@ MATCH (first:Number WHERE NOT EXISTS {()-[:NEXT]->(first)})
 SET first:Current;
 
 MATCH (t:PosToken)
-WITH t, t.initPos AS pos ORDER BY pos
+WITH t, t.pos AS pos ORDER BY pos
 WITH collect(t) AS tokens
 CALL apoc.nodes.link(tokens, "NEXT");
 
