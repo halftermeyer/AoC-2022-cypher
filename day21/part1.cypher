@@ -26,11 +26,6 @@ MERGE (r:Monkey {name:right_monkey})
 CREATE (m)-[:LEFT]->(l)
 CREATE (m)-[:RIGHT]->(r);
 
-MATCH (l:Monkey WHERE l.value IS NOT NULL)
-  <-[:LEFT]-(m:Monkey WHERE l.value IS NULL)
-  -[:RIGHT]->(r:Monkey WHERE l.value IS NOT NULL)
-RETURN *
-
 CALL apoc.periodic.commit('
 MATCH (l:Monkey)<-[:LEFT]-(m:Monkey)-[:RIGHT]->(r:Monkey)
 WHERE l.value IS NOT NULL
@@ -42,4 +37,6 @@ YIELD value
 SET m.value = value.number
 WITH count(*) AS limit
 RETURN limit
-')
+');
+
+MATCH (m:Monkey {name:"root"}) RETURN m.value AS `part 1`;
