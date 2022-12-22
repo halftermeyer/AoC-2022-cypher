@@ -37,6 +37,6 @@ YIELD value
 SET m.value = value.number
 WITH count(*) AS limit
 RETURN limit
-');
+')
 
 MATCH (m:Monkey {name:"root"}) RETURN m.value AS `part 1`;
