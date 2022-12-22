@@ -59,7 +59,11 @@ WITH [x IN parsedLine WHERE x <> ""] AS parsedLine
 WITH [ix IN range(0, size(parsedLine)-1)|
     {
         ix: ix,
-        val: parsedLine[ix],
+        val: CASE
+                WHEN parsedLine[ix] IN ['R','L']
+                THEN parsedLine[ix]
+                ELSE toInteger(parsedLine[ix])
+            END,
         type:CASE
                 WHEN parsedLine[ix] IN ['R','L']
                 THEN "rotate"
@@ -129,4 +133,4 @@ WITH result.limit AS limit
 RETURN limit',{});
 
 MATCH (pos:Tile&Current),(dir:Direction&Current)
-RETURN 1000 * pos.y + 4 * pos.x + dir.val;
+RETURN 1000 * pos.y + 4 * pos.x + dir.val AS `part 1`;
