@@ -1,4 +1,4 @@
-:param env => 'test';
+:param env => 'input';
 
 MATCH (n) DETACH DELETE n;
 
@@ -147,7 +147,6 @@ MERGE (elve)-[:NW]->(nw);
 
 
 ///// RESULT
-
 
 MATCH (e:Elve)
 WITH collect(e) AS elves
