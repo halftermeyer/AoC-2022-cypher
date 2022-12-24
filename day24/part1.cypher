@@ -145,7 +145,7 @@ CALL apoc.periodic.iterate("
 MATCH (p:Position WHERE p.tile <> '.')
 RETURN p",
 "DETACH DELETE p",
-{batchSize:1000});
+{batchSize:10000});
 
 MATCH (dim:Dimension)
 CREATE (target:Target)
@@ -169,12 +169,6 @@ CALL gds.shortestPath.dijkstra.stream('space_time_map', {
 })
 YIELD index, sourceNode, targetNode, totalCost, nodeIds, costs, path
 WITH
-    index,
-    gds.util.asNode(sourceNode).name AS sourceNodeName,
-    gds.util.asNode(targetNode).name AS targetNodeName,
-    totalCost,
-    [nodeId IN nodeIds | gds.util.asNode(nodeId).name] AS nodeNames,
-    costs,
     nodes(path) as path
 ORDER BY index
 RETURN path[-2].t AS `part 1`;
