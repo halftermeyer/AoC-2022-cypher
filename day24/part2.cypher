@@ -26,12 +26,6 @@ CALL gds.shortestPath.dijkstra.stream('space_time_map', {
 })
 YIELD index, sourceNode, targetNode, totalCost, nodeIds, costs, path
 WITH
-    index,
-    gds.util.asNode(sourceNode).name AS sourceNodeName,
-    gds.util.asNode(targetNode).name AS targetNodeName,
-    totalCost,
-    [nodeId IN nodeIds | gds.util.asNode(nodeId).name] AS nodeNames,
-    costs,
     nodes(path) as path
 ORDER BY index
 WITH size(path) - 2 AS len, path[-2] AS stop_1
@@ -46,12 +40,6 @@ CALL gds.shortestPath.dijkstra.stream('space_time_map', {
 })
 YIELD index, sourceNode, targetNode, totalCost, nodeIds, costs, path
 WITH
-    index,
-    gds.util.asNode(sourceNode).name AS sourceNodeName,
-    gds.util.asNode(targetNode).name AS targetNodeName,
-    totalCost,
-    [nodeId IN nodeIds | gds.util.asNode(nodeId).name] AS nodeNames,
-    costs,
     nodes(path) as path
 ORDER BY index
 WITH size(path) - 2 AS len, path[-2] AS stop_2
@@ -66,12 +54,6 @@ CALL gds.shortestPath.dijkstra.stream('space_time_map', {
 })
 YIELD index, sourceNode, targetNode, totalCost, nodeIds, costs, path
 WITH
-    index,
-    gds.util.asNode(sourceNode).name AS sourceNodeName,
-    gds.util.asNode(targetNode).name AS targetNodeName,
-    totalCost,
-    [nodeId IN nodeIds | gds.util.asNode(nodeId).name] AS nodeNames,
-    costs,
     nodes(path) as path
 ORDER BY index
 WITH size(path) - 2 AS len, path[-2] AS stop_3
