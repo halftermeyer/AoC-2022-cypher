@@ -16,10 +16,12 @@ WITH sum(num) AS total
 CREATE (:Total {decimal:total, toProcess:total, snafu:""});
 
 CALL apoc.periodic.commit('
-WITH [{sym:"0", val:0},{sym:"1", val:1},{sym:"2", val:2},{sym:"=", val:-2},{sym:"-", val:-1}] AS syms
+WITH [{sym:"0", val:0},{sym:"1", val:1},{sym:"2", val:2},
+  {sym:"=", val:-2},{sym:"-", val:-1}] AS syms
 MATCH (t:Total)
 WITH t, t.toProcess % 5 AS mod, syms
-WITH  (t.toProcess - syms[mod].val)/5 AS new_toProcess, syms[mod].sym+t.snafu AS new_snafu, t
+WITH  (t.toProcess - syms[mod].val)/5 AS new_toProcess,
+  syms[mod].sym+t.snafu AS new_snafu, t
 SET t.toProcess = new_toProcess, t.snafu = new_snafu
 WITH t.toProcess AS limit
 RETURN limit', {});
