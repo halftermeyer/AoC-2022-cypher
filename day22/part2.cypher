@@ -328,11 +328,11 @@ CREATE (r)-[:ROTATE {val:'L'}]->(u)-[:ROTATE {val:'L'}]->
   (l)-[:ROTATE {val:'L'}]->(d)-[:ROTATE {val:'L'}]->(r);
 
 CREATE
-  (gn:CubeDirection:init:Current {type:"GREEN", natural:true}),
+  (gn:CubeDirection {type:"GREEN", natural:true}),
   (gr:CubeDirection {type:"GREEN", natural:false}),
   (un:CubeDirection {type:"BLUE", natural:true}),
   (ur:CubeDirection {type:"BLUE", natural:false}),
-  (an:CubeDirection {type:"BLACK", natural:true}),
+  (an:CubeDirection:init:Current {type:"BLACK", natural:true}),
   (ar:CubeDirection {type:"BLACK", natural:false});
 
 MATCH (cd:CubeDirection)
