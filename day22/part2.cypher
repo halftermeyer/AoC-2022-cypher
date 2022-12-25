@@ -83,10 +83,10 @@ AND x.Y = box.Y)
 CREATE (a)-[:BLACK]->(b);
 
 UNWIND [{X:1,Y:3}, {X:2,Y:3}] AS box
-MATCH (a:Tile)-[:RIGHT]->(b:Tile)
+MATCH (a:Tile)<-[:RIGHT]-(b:Tile)
 WHERE all(x IN [a, b] WHERE x.X = box.X
 AND x.Y = box.Y)
-CREATE (a)<-[:BLACK]-(b);
+CREATE (a)-[:BLACK]->(b);
 
 //////CUBE EDGES
 
@@ -177,7 +177,7 @@ WITH tgt, collect(t_src) AS t_src_s
 MATCH (t_tgt:Tile {X:tgt.X, Y:tgt.Y})
 WHERE NOT EXISTS {()-[:BLUE]->(t_tgt)}
 WITH t_src_s, t_tgt, t_tgt.x AS x, t_tgt.y AS y
-ORDER BY y DESC
+ORDER BY y ASC
 WITH t_src_s, collect(t_tgt) AS t_tgt_s
 UNWIND range(0, size(t_src_s)-1) AS ix
 WITH ix, t_src_s[ix] AS s, t_tgt_s[ix] AS t
@@ -219,12 +219,12 @@ WITH {X:2, Y:1} AS src, {X:3, Y:1} AS tgt
 MATCH (t_src:Tile {X:src.X, Y:src.Y})
 WHERE NOT EXISTS {(t_src)-[:BLACK]->()}
 WITH tgt, t_src, t_src.x AS x, t_src.y AS y
-ORDER BY y DESC
+ORDER BY y ASC
 WITH tgt, collect(t_src) AS t_src_s
 MATCH (t_tgt:Tile {X:tgt.X, Y:tgt.Y})
 WHERE NOT EXISTS {()-[:BLACK]->(t_tgt)}
 WITH t_src_s, t_tgt, t_tgt.x AS x, t_tgt.y AS y
-ORDER BY y DESC
+ORDER BY y ASC
 WITH t_src_s, collect(t_tgt) AS t_tgt_s
 UNWIND range(0, size(t_src_s)-1) AS ix
 WITH ix, t_src_s[ix] AS s, t_tgt_s[ix] AS t
@@ -234,12 +234,12 @@ WITH {X:2, Y:3} AS src, {X:1, Y:3} AS tgt
 MATCH (t_src:Tile {X:src.X, Y:src.Y})
 WHERE NOT EXISTS {(t_src)-[:BLACK]->()}
 WITH tgt, t_src, t_src.x AS x, t_src.y AS y
-ORDER BY y DESC
+ORDER BY y ASC
 WITH tgt, collect(t_src) AS t_src_s
 MATCH (t_tgt:Tile {X:tgt.X, Y:tgt.Y})
 WHERE NOT EXISTS {()-[:BLACK]->(t_tgt)}
 WITH t_src_s, t_tgt, t_tgt.x AS x, t_tgt.y AS y
-ORDER BY y DESC
+ORDER BY y ASC
 WITH t_src_s, collect(t_tgt) AS t_tgt_s
 UNWIND range(0, size(t_src_s)-1) AS ix
 WITH ix, t_src_s[ix] AS s, t_tgt_s[ix] AS t
@@ -249,12 +249,12 @@ WITH {X:3, Y:1} AS src, {X:2, Y:3} AS tgt
 MATCH (t_src:Tile {X:src.X, Y:src.Y})
 WHERE NOT EXISTS {(t_src)-[:BLACK]->()}
 WITH tgt, t_src, t_src.x AS x, t_src.y AS y
-ORDER BY y DESC
+ORDER BY y ASC
 WITH tgt, collect(t_src) AS t_src_s
 MATCH (t_tgt:Tile {X:tgt.X, Y:tgt.Y})
 WHERE NOT EXISTS {()-[:BLACK]->(t_tgt)}
 WITH t_src_s, t_tgt, t_tgt.x AS x, t_tgt.y AS y
-ORDER BY y ASC
+ORDER BY y DESC
 WITH t_src_s, collect(t_tgt) AS t_tgt_s
 UNWIND range(0, size(t_src_s)-1) AS ix
 WITH ix, t_src_s[ix] AS s, t_tgt_s[ix] AS t
@@ -264,12 +264,12 @@ WITH {X:1, Y:3} AS src, {X:2, Y:1} AS tgt
 MATCH (t_src:Tile {X:src.X, Y:src.Y})
 WHERE NOT EXISTS {(t_src)-[:BLACK]->()}
 WITH tgt, t_src, t_src.x AS x, t_src.y AS y
-ORDER BY y DESC
+ORDER BY y ASC
 WITH tgt, collect(t_src) AS t_src_s
 MATCH (t_tgt:Tile {X:tgt.X, Y:tgt.Y})
 WHERE NOT EXISTS {()-[:BLACK]->(t_tgt)}
 WITH t_src_s, t_tgt, t_tgt.x AS x, t_tgt.y AS y
-ORDER BY y ASC
+ORDER BY y DESC
 WITH t_src_s, collect(t_tgt) AS t_tgt_s
 UNWIND range(0, size(t_src_s)-1) AS ix
 WITH ix, t_src_s[ix] AS s, t_tgt_s[ix] AS t
@@ -409,3 +409,7 @@ WITH result
 WHERE result.limit IS NOT null
 WITH result.limit AS limit
 RETURN limit',{});
+
+MATCH (pos:Tile&Current)
+MATCH (dir:CubeDirection&Current)-[:SAME_AS {X:pos.X,Y:pos.Y}]->(eqdir:Direction)
+RETURN 1000 * pos.y + 4 * pos.x + eqdir.val AS `part 1`;
