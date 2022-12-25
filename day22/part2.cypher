@@ -412,4 +412,4 @@ RETURN limit',{});
 
 MATCH (pos:Tile&Current)
 MATCH (dir:CubeDirection&Current)-[:SAME_AS {X:pos.X,Y:pos.Y}]->(eqdir:Direction)
-RETURN 1000 * pos.y + 4 * pos.x + eqdir.val AS `part 1`;
+RETURN 1000 * pos.y + 4 * pos.x + eqdir.val AS `part 2`;
