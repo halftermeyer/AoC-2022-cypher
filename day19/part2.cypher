@@ -49,24 +49,87 @@ CREATE (:State:Unprocessed {
     geodeBot:0
 });
 
+MATCH (b:Blueprint)-->(a:Action)
+WITH b, a.ore AS ore
+ORDER BY ore ASC
+WHERE ore IS NOT null
+WITH b, collect(ore)[0] AS ore
+SET b.maxOreBot = -ore;
+
+MATCH (b:Blueprint)-->(a:Action)
+WITH b, a.obsidian AS obsidian
+ORDER BY obsidian ASC
+WHERE obsidian IS NOT null
+WITH b, collect(obsidian)[0] AS obsidian
+SET b.maxObsidianBot = -obsidian;
+
+MATCH (b:Blueprint)-->(a:Action)
+WITH b, a.clay AS clay
+ORDER BY clay ASC
+WHERE clay IS NOT null
+WITH b, collect(clay)[0] AS clay
+SET b.maxClayBot = -clay;
 
 //// LOOP 32 TIMES ////
 
-// heuristics
-MATCH (s:Unprocessed WHERE s.minute <= 32)
-WITH s, s.blueprint AS blueprint,
-s.geodes + s.geodeBot * (32 - s.minute) AS g,
-s.obsidian + s.obsidianBot * (32 - s.minute) AS ob,
-s.clay + s.clayBot * (32 - s.minute) AS c,
-s.ore + s.oreBot * (32 - s.minute) AS or
-ORDER BY g DESC, ob DESC, c DESC, or DESC
-WITH collect(s) AS states, blueprint
-UNWIND states[2000..] AS s
-DETACH DELETE s;
+// pruning
+MATCH (s:Unprocessed)
+MATCH (b:Blueprint {id:s.blueprint})
+WITH s, b, s.blueprint AS blueprint,
+s.geodeBot AS g,
+s.obsidianBot AS ob,
+s.clayBot AS c,
+s.oreBot AS o,
+b.maxOreBot AS maxo,
+b.maxClayBot AS maxc,
+b.maxObsidianBot AS maxob
+WHERE ob > maxob OR c > maxc OR o > maxo
+REMOVE s:Unprocessed
+SET s:Pruned:ToManyBotsOfAKind;
 
-CALL apoc.periodic.iterate("MATCH (s:State&!Unprocessed)
-RETURN s","
-DETACH DELETE s",{batchSize:1000});
+CALL apoc.periodic.iterate('MATCH (s:Unprocessed)<-[:NEXT {action:"spawnGeodeRobot"}]
+  -()-[r:NEXT WHERE r.action <> "spawnGeodeRobot"]->(other:Unprocessed)
+RETURN other',
+'SET other:Pruned:GeodeRobotBefore
+REMOVE other:Unprocessed', {batchSize:1000});
+
+// CALL apoc.periodic.iterate(
+// "MATCH (s:Unprocessed)
+// MATCH (b:Blueprint {id:s.blueprint})
+// WITH s, b,
+// b.maxObsidianBot - s.obsidianBot AS ob,
+// b.maxClayBot - s.clayBot AS c,
+// b.maxOreBot - s.oreBot AS o
+// WITH b, {heur:ob + c + o, state: s} AS heur_s, ob + c + o AS heur
+// ORDER BY heur ASC
+// WITH b, collect(heur_s) AS heur_s, collect(heur_s)[0].heur AS min_heur
+// UNWIND heur_s AS hs
+// WITH b, min_heur, hs.heur AS heur, hs.state AS s
+// WHERE heur > min_heur + 3
+// RETURN s",
+// "REMOVE s:Unprocessed
+// SET s:Pruned:ToFewRobots;",{batchSize:1000});
+
+
+// heuristics
+MATCH (s:Unprocessed)
+MATCH (b:Blueprint {id:s.blueprint})
+WITH s, b,
+10_000_000 * (s.geodes + s.geodeBot*(32-s.minute)) AS g,
+10_000 * s.obsidianBot AS ob,
+100 * s.clayBot AS c,
+s.oreBot AS o
+WITH s, b, g+ob+c+o AS fitness
+ORDER BY fitness DESC
+WITH collect(s) AS states, b
+UNWIND states[5000..] AS s
+REMOVE s:Unprocessed
+SET s:Pruned:Heuristics;
+
+
+// CALL apoc.periodic.iterate("MATCH (s:State&!Unprocessed)
+// RETURN s","
+// DETACH DELETE s",{batchSize:1000});
 
 CALL apoc.periodic.iterate(
   'MATCH (s:State&Unprocessed WHERE s.minute <= 32)
@@ -76,7 +139,7 @@ CALL apoc.periodic.iterate(
   AND coalesce(a.ore, 0) + s.ore >= 0
   AND coalesce(a.clay, 0) + s.clay >= 0
   AND coalesce(a.obsidian, 0) + s.obsidian >= 0
-  CREATE (new_s:State:Unprocessed {
+  MERGE (new_s:State:Unprocessed {
     minute: s.minute + 1,
     ore: s.ore + s.oreBot + coalesce(a.ore, 0),
     clay: s.clay + s.clayBot + coalesce(a.clay, 0),
@@ -88,14 +151,19 @@ CALL apoc.periodic.iterate(
     geodeBot: s.geodeBot + coalesce(a.geodeBot, 0),
     blueprint: s.blueprint
   })
+  CREATE (s)-[:NEXT {action:a.action, blueprint:a.blueprint}]->(new_s)
   REMOVE s:Unprocessed;',{parallel:false, batchSize:500});
+
 
 
 ///// END LOOP //////
 
 MATCH (n:Unprocessed)
 WITH n.blueprint AS blueprint, n.geodes AS geodes
-ORDER BY blueprint, geodes
+ORDER BY geodes DESC
 WITH blueprint, collect(geodes)[0] AS geodes
 WITH collect(geodes) AS geodes
 RETURN reduce (acc=1, g IN geodes | acc * g) AS `part 2`;
+
+//15288
+//24192
