@@ -4,7 +4,7 @@ CREATE CONSTRAINT valve_name
 IF NOT EXISTS
 FOR (v:Valve) REQUIRE (v.name) IS NODE KEY;
 
-MATCH (n) DETACH DELETE n;
+CALL apoc.periodic.iterate("MATCH (n) RETURN n","DETACH DELETE n",{batchSize:10000});
 
 // parse
 LOAD CSV FROM 'file:///'+$env+'.txt' AS line FIELDTERMINATOR ";"
@@ -15,20 +15,21 @@ WITH line_1, replace(line_2," tunnel leads to valve ", "") AS line_2
 WITH line_1, replace(line_2," ", "") AS line_2
 WITH line_1, split(line_2,",") AS line_2
 WITH line_1[0] AS valve, toInteger(line_1[1]) AS flowRate, line_2 AS tunnels_to
-MERGE (v:Valve {name:valve})
-    SET v.flowRate = flowRate
-MERGE (v)-[:OPEN {duration: 1, flowRate: flowRate, valve: valve}]->(v)
+MERGE (vc:Valve {name:valve})
+    SET vc.flowRate = 0
+MERGE (vo:Valve:Open {name:valve+"_open"})
+    SET vo.flowRate = flowRate
+MERGE (vc)-[:OPEN {duration: 1, flowRate: flowRate, valve: valve}]->(vo)
 FOREACH (adjv IN tunnels_to |
     MERGE (av:Valve {name:adjv})
-    CREATE (v)-[:TUNNEL {duration: 1}]->(av));
+    CREATE (vc)-[:TUNNEL {duration: 1}]->(av)
+    CREATE (vo)-[:TUNNEL {duration: 1}]->(av));
 
 MATCH (v:Valve {name: "AA"})
 SET v:Init;
-MATCH (v:Valve WHERE v.flowRate > 0)
-SET v:ToOpen;
+MATCH (v:Valve:Open WHERE v.flowRate = 0)
+DETACH DELETE v;
 
-MATCH (v:Valve&!ToOpen)-[r:OPEN]->(v)
-DELETE r;
 
 CALL gds.graph.drop('tunnel_network', false);
 
@@ -37,6 +38,9 @@ CALL gds.graph.project(
   'Valve',
   {
     TUNNEL: {
+      properties: 'duration'
+    },
+    OPEN: {
       properties: 'duration'
     }
   }
@@ -54,20 +58,39 @@ MATCH (src:Valve WHERE id(src) = sourceNodeId),
 (tgt:Valve WHERE id(tgt) = targetNodeId)
 MERGE (src)-[:DIRECT {duration:toInteger(distance)}]->(tgt);
 
-MATCH (v:Valve&!(Init|ToOpen)) DETACH DELETE v;
+MATCH (v:Valve&!(Init|Open)) DETACH DELETE v;
 
 
-MATCH p=(:Valve {name:"AA"})-[DIRECT*15]->(:Valve)
-WITH *, relationships(p) AS rels, nodes(p) AS nds
-WHERE size(apoc.coll.toSet([n IN nds | id(n)])) = size(nds)
-WITH *, [r IN rels | r.duration] AS durations
-WITH *, apoc.coll.flatten([d IN durations | [d, 1]]) AS durations
-WITH *, [ix IN range(1, size(durations)) |
-    toInteger(apoc.coll.sum(durations[0..ix]))] AS from_t
-WITH *, [t IN from_t | 30 - t] AS durActive
-WITH *, [v In nds | v.flowRate] AS flowRates
-WITH *, apoc.coll.flatten([d IN flowRates[1..] | [0, d]]) AS flowRates
-WITH *, [ix IN range(0, size(flowRates)-1) | flowRates[ix] * durActive[ix]] AS pressure
-RETURN toInteger(apoc.coll.sum(pressure)) AS `part 1`
-ORDER BY `part 1` DESC
-LIMIT 1
+MATCH (init:Init)
+CREATE (me:Unprocessed:Me {left:30, pressure:0, seen:[init.name]})
+CREATE (me)-[:AT]->(init);
+
+///// END OF SETUP
+
+CALL apoc.periodic.commit(
+"
+MATCH (me:Unprocessed)
+REMOVE me:Unprocessed
+WITH me, me.pressure/(31-me.left) AS avg_pressure
+ORDER BY avg_pressure DESC LIMIT 1000
+WITH me
+MATCH (me)-[:AT]->(v:Valve)
+MATCH (v)-[r:DIRECT]->(other_v:Valve)
+WHERE NOT other_v.name IN me.seen
+AND me.left-r.duration >=0
+CREATE (new_me:Me:Unprocessed
+  {
+    left: me.left-r.duration,
+    pressure: me.pressure + (me.left-r.duration) * other_v.flowRate,
+    seen: me.seen + other_v.name
+  })
+CREATE (new_me)-[:AT]->(other_v)
+WITH count(*) AS limit
+RETURN limit
+");
+
+
+MATCH (n:Me)
+WITH n, size(n.seen) AS seen, n.pressure AS pressure
+ORDER BY pressure DESC LIMIT 1
+RETURN pressure AS `part 1`;
