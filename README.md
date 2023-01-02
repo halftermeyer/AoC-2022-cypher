@@ -24,5 +24,5 @@ Advent of Code in cypher with neo4j
 - [day 21](https://github.com/halftermeyer/AoC-2022-cypher/tree/main/day21)
 - [day 22](https://github.com/halftermeyer/AoC-2022-cypher/tree/main/day22)
 - [day 23](https://github.com/halftermeyer/AoC-2022-cypher/tree/main/day23)
-- [day 23](https://github.com/halftermeyer/AoC-2022-cypher/tree/main/day23)
+- [day 24](https://github.com/halftermeyer/AoC-2022-cypher/tree/main/day24)
 - [day 25](https://github.com/halftermeyer/AoC-2022-cypher/tree/main/day25)
