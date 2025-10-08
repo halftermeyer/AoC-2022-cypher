@@ -2,7 +2,7 @@
 
 `Cypher Query Language` is AdventOfCode-complete!
 
-This repo is a 50⭑ _Advent of Code_ in pure cypher with neo4j 5.
+This repo is a 50⭑ _Advent of Code_ in cypher (with APOC and GDS) on Neo4j 5.
 
 This shouldn't be considered a referential of best practice.
 
